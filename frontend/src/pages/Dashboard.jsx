@@ -55,31 +55,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navigation Bar */}
-      <nav className="bg-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-blue-600">PetMarket</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate('/search')}
-              className="text-gray-600 hover:text-blue-600"
-            >
-              Szukaj
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
-            >
-              Wyloguj
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto p-8">
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-4xl mx-auto">
         {user?.role === 'owner' ? (
           <>
             <h1 className="text-3xl font-bold text-gray-800 mb-6">Moje rezerwacje</h1>
