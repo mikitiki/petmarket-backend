@@ -26,3 +26,52 @@ Content-Type: application/json
   "email": "weterynarz@example.com",
   "password": "haslo123"
 }
+
+### Tworzenie profilu specjalisty
+POST http://localhost:5000/api/specialists/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3NTg5Mzc0NiwianRpIjoiMWNkNWQ2ZmQtYjA1NS00MjdmLWI5Y2MtYTk0MTRiYjEzNWRiIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NzU4OTM3NDYsImNzcmYiOiI4NjJjMjVhMi0xOGZhLTQ0ODYtYmY0My1kNjI3ZGIzNjlmZTgiLCJleHAiOjE3NzU4OTQ2NDYsInJvbGUiOiJzcGVjaWFsaXN0In0.kZK_i1GFMFPgHFRpTMg4lVQ-x7lY8g7c7ds90WKoxcU
+
+{
+  "name": "Dr. Anna Kowalska",
+  "city": "Warszawa",
+  "specialization": "weterynarz",
+  "bio": "Specjalista od psow i kotow, 10 lat doswiadczenia"
+}
+
+### Lista specjalistow
+GET http://localhost:5000/api/specialists/
+
+### Wyszukiwanie po specjalizacji
+GET http://localhost:5000/api/specialists/?specialization=weterynarz
+
+### Wyszukiwanie po miescie i specjalizacji jednoczesnie
+GET http://localhost:5000/api/specialists/?city=Warszawa&specialization=weterynarz
+
+### Logowanie wlasciciela
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jan@example.com",
+  "password": "haslo123"
+}
+
+### Tworzenie rezerwacji (wklej token wlasciciela)
+POST http://localhost:5000/api/bookings/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3NjUyODE2NSwianRpIjoiMzFkNTQ5MTgtMDc2NS00OGUxLWEwOGEtNmRkNzIyYTM3YTEyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjIiLCJuYmYiOjE3NzY1MjgxNjUsImNzcmYiOiIyZGFhZWE4NC1jMGRkLTRjMGEtOWVkZi1mMDE3OWE0OTE2OWIiLCJleHAiOjE3NzY1MjkwNjUsInJvbGUiOiJvd25lciJ9.kIwcl3WKS3zNdN-oS75ddHFabR3WJVEN6Lb6ND7YKEk
+
+{
+  "specialist_id": 1,
+  "date": "2026-05-10",
+  "time": "14:00"
+}
+
+### Moje rezerwacje (wlasciciel)
+GET http://localhost:5000/api/bookings/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3NjUyODE2NSwianRpIjoiMzFkNTQ5MTgtMDc2NS00OGUxLWEwOGEtNmRkNzIyYTM3YTEyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjIiLCJuYmYiOjE3NzY1MjgxNjUsImNzcmYiOiIyZGFhZWE4NC1jMGRkLTRjMGEtOWVkZi1mMDE3OWE0OTE2OWIiLCJleHAiOjE3NzY1MjkwNjUsInJvbGUiOiJvd25lciJ9.kIwcl3WKS3zNdN-oS75ddHFabR3WJVEN6Lb6ND7YKEk
+
+### Moje rezerwacje (specjalista)
+GET http://localhost:5000/api/bookings/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3NjUyODA4MiwianRpIjoiYmRjZjhhYmItZTNiYi00MDBlLTgwMjAtNjIzNjM3N2U0YTI5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjEiLCJuYmYiOjE3NzY1MjgwODIsImNzcmYiOiJjNTRiMTIzYy1jYjM5LTQwYWUtYTFiZC00YTUwOGI1NzU3YmEiLCJleHAiOjE3NzY1Mjg5ODIsInJvbGUiOiJzcGVjaWFsaXN0In0.vIhvjmwFqe71NcHpwR7uG_PqiKu2dz0d7_BohsC5w_4
