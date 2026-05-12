@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getSpecialistById, createBooking } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { AlertCircle, CheckCircle, User } from 'lucide-react';
 
 const SpecialistProfile = () => {
   const { id } = useParams();
@@ -23,7 +24,7 @@ const SpecialistProfile = () => {
         const data = await getSpecialistById(id);
         setSpecialist(data);
       } catch (err) {
-        setError('Failed to load specialist profile');
+        setError('Nie udało się wczytać profilu specjalisty');
       } finally {
         setLoading(false);
       }
@@ -54,7 +55,7 @@ const SpecialistProfile = () => {
         time: selectedSlot.time,
       });
       setBookingSuccess('Wizyta zarezerwowana!');
-      setBookedSlots(prev => new Set([...prev, selectedSlot.id]));
+      setBookedSlots((prev) => new Set([...prev, selectedSlot.id]));
       setShowModal(false);
     } catch (err) {
       setBookingError('Błąd podczas rezerwacji wizyty');
@@ -63,12 +64,19 @@ const SpecialistProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
-        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md animate-pulse">
-          <div className="w-24 h-24 bg-gray-300 rounded-full mb-4"></div>
-          <div className="h-6 bg-gray-300 rounded mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded mb-4"></div>
-          <div className="h-4 bg-gray-300 rounded"></div>
+      <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
+        <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem', animation: 'pulse 2s infinite', opacity: 0.5 }}>
+          <div
+            style={{
+              width: '6rem',
+              height: '6rem',
+              backgroundColor: 'var(--border)',
+              borderRadius: '50%',
+              marginBottom: '1rem',
+            }}
+          ></div>
+          <div style={{ height: '1.5rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem', marginBottom: '0.5rem' }}></div>
+          <div style={{ height: '1rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem' }}></div>
         </div>
       </div>
     );
@@ -76,42 +84,73 @@ const SpecialistProfile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
-        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-          <p className="text-red-500 text-center">{error}</p>
+      <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
+        <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fca5a5' }}>
+            <AlertCircle size={20} />
+            {error}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center mb-6">
+    <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
+      <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', gap: '1.5rem' }}>
           {specialist.photo_url ? (
             <img
               src={specialist.photo_url}
               alt={specialist.name}
-              className="w-24 h-24 rounded-full object-cover mr-6"
+              style={{
+                width: '6rem',
+                height: '6rem',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
             />
           ) : (
-            <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center mr-6">
-              <span className="text-gray-600 text-2xl font-bold">{specialist.name.charAt(0)}</span>
+            <div
+              style={{
+                width: '6rem',
+                height: '6rem',
+                backgroundColor: 'var(--bg-secondary)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <User size={32} style={{ color: 'var(--text-secondary)' }} />
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">{specialist.name}</h1>
-            <p className="text-lg text-gray-600">{specialist.specialization}</p>
-            <p className="text-gray-500">{specialist.city}</p>
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '2rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+              {specialist.name}
+            </h1>
+            <p style={{ fontSize: '1.125rem', color: 'var(--accent)', margin: '0.25rem 0 0 0' }}>
+              {specialist.specialization}
+            </p>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+              {specialist.city}
+            </p>
           </div>
         </div>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">O mnie</h2>
-          <p className="text-gray-700">{specialist.bio}</p>
+
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+            O mnie
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            {specialist.bio}
+          </p>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Dostępne terminy</h2>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+            Dostępne terminy
+          </h2>
           {specialist.available_slots && specialist.available_slots.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {specialist.available_slots.map((slot) => (
@@ -119,44 +158,117 @@ const SpecialistProfile = () => {
                   key={slot.id}
                   onClick={() => handleBookSlot(slot)}
                   disabled={bookedSlots.has(slot.id)}
-                  className={`p-3 border rounded-md text-center ${
-                    bookedSlots.has(slot.id)
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100'
-                  }`}
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid',
+                    borderRadius: '0.5rem',
+                    textAlign: 'center',
+                    cursor: bookedSlots.has(slot.id) ? 'not-allowed' : 'pointer',
+                    backgroundColor: bookedSlots.has(slot.id) ? 'var(--bg-secondary)' : 'var(--bg-secondary)',
+                    borderColor: bookedSlots.has(slot.id) ? 'var(--border)' : 'var(--accent)',
+                    color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--accent)',
+                    opacity: bookedSlots.has(slot.id) ? 0.5 : 1,
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    if (!bookedSlots.has(slot.id)) {
+                      e.target.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = 'var(--bg-secondary)';
+                  }}
                 >
-                  <div className="font-semibold">{slot.date}</div>
-                  <div className="text-sm">{slot.time}</div>
+                  <div style={{ fontWeight: '600', color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                    {slot.date}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--accent)' }}>
+                    {slot.time}
+                  </div>
                 </button>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Brak dostępnych terminów</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Brak dostępnych terminów</p>
           )}
         </div>
 
-        {bookingError && <p className="text-red-500 mb-4">{bookingError}</p>}
-        {bookingSuccess && <p className="text-green-500 mb-4">{bookingSuccess}</p>}
+        {bookingError && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(220, 38, 38, 0.1)', borderRadius: '0.5rem', color: '#fca5a5', marginBottom: '1rem' }}>
+            <AlertCircle size={18} />
+            {bookingError}
+          </div>
+        )}
+        {bookingSuccess && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(34, 197, 94, 0.1)', borderRadius: '0.5rem', color: '#86efac' }}>
+            <CheckCircle size={18} />
+            {bookingSuccess}
+          </div>
+        )}
       </div>
 
       {/* Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Potwierdź rezerwację</h3>
-            <p className="mb-6">
-              Czy chcesz zarezerwować wizytę dnia {selectedSlot.date} o {selectedSlot.time}?
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '1rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              maxWidth: '28rem',
+              width: '100%',
+            }}
+          >
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+              Potwierdź rezerwację
+            </h3>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+              Czy chcesz zarezerwować wizytę dnia {selectedSlot?.date} o {selectedSlot?.time}?
             </p>
-            <div className="flex justify-end space-x-4">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = 'var(--border)')}
+                onMouseOut={(e) => (e.target.style.backgroundColor = 'var(--bg-secondary)')}
               >
                 Anuluj
               </button>
               <button
                 onClick={confirmBooking}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'var(--accent)',
+                  color: '#0f0f0f',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '600',
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = 'var(--accent-hover)')}
+                onMouseOut={(e) => (e.target.style.backgroundColor = 'var(--accent)')}
               >
                 Potwierdź
               </button>

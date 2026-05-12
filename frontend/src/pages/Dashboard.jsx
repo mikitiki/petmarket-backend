@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMyBookings, cancelBooking } from '../services/api';
+import { Clock, AlertCircle, CheckCircle, X } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -21,7 +22,7 @@ const Dashboard = () => {
       const data = await getMyBookings();
       setBookings(data);
     } catch (err) {
-      setError('Failed to load bookings');
+      setError('Nie udało się wczytać rezerwacji');
     } finally {
       setLoading(false);
     }
@@ -30,9 +31,9 @@ const Dashboard = () => {
   const handleCancel = async (id) => {
     try {
       await cancelBooking(id);
-      fetchBookings(); // Refresh the list
+      fetchBookings();
     } catch (err) {
-      setError('Failed to cancel booking');
+      setError('Nie udało się anulować rezerwacji');
     }
   };
 
@@ -44,53 +45,108 @@ const Dashboard = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'oczekująca':
-        return 'bg-yellow-100 text-yellow-800';
+        return { bg: 'rgba(245, 158, 11, 0.1)', text: '#f59e0b' };
       case 'potwierdzona':
-        return 'bg-green-100 text-green-800';
+        return { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e' };
       case 'anulowana':
-        return 'bg-red-100 text-red-800';
+        return { bg: 'rgba(220, 38, 38, 0.1)', text: '#dc2626' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { bg: 'var(--bg-card)', text: 'var(--text-secondary)' };
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'oczekująca':
+        return <Clock size={16} />;
+      case 'potwierdzona':
+        return <CheckCircle size={16} />;
+      case 'anulowana':
+        return <X size={16} />;
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
       <div className="max-w-4xl mx-auto">
         {user?.role === 'owner' ? (
           <>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Moje rezerwacje</h1>
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+              Moje rezerwacje
+            </h1>
+
             {loading ? (
-              <div className="space-y-4">
+              <div style={{ display: 'grid', gap: '1rem' }}>
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-white p-4 rounded-lg shadow-md animate-pulse">
-                    <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded"></div>
+                  <div
+                    key={i}
+                    style={{
+                      backgroundColor: 'var(--bg-card)',
+                      borderRadius: '0.75rem',
+                      padding: '1rem',
+                      animation: 'pulse 2s infinite',
+                      opacity: 0.5,
+                    }}
+                  >
+                    <div style={{ height: '1rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem', marginBottom: '0.5rem' }}></div>
+                    <div style={{ height: '1rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem' }}></div>
                   </div>
                 ))}
               </div>
             ) : error ? (
-              <p className="text-red-500">{error}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '1rem', backgroundColor: 'rgba(220, 38, 38, 0.1)', borderRadius: '0.75rem', color: '#fca5a5' }}>
+                <AlertCircle size={20} />
+                {error}
+              </div>
             ) : bookings.length === 0 ? (
-              <p className="text-gray-500">Brak rezerwacji</p>
+              <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>Brak rezerwacji</p>
             ) : (
-              <div className="space-y-4">
+              <div style={{ display: 'grid', gap: '1rem' }}>
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white p-6 rounded-lg shadow-md">
-                    <div className="flex justify-between items-start">
+                  <div key={booking.id} style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
                           {booking.specialist_name}
                         </h3>
-                        <p className="text-gray-600">{booking.date} o {booking.time}</p>
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(booking.status)}`}>
+                        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+                          {booking.date} o {booking.time}
+                        </p>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            marginTop: '0.5rem',
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: getStatusColor(booking.status).bg,
+                            color: getStatusColor(booking.status).text,
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                          }}
+                        >
+                          {getStatusIcon(booking.status)}
                           {booking.status}
-                        </span>
+                        </div>
                       </div>
                       {(booking.status === 'oczekująca' || booking.status === 'potwierdzona') && (
                         <button
                           onClick={() => handleCancel(booking.id)}
-                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                          style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            color: '#fca5a5',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            fontWeight: '500',
+                          }}
+                          onMouseOver={(e) => (e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.2)')}
+                          onMouseOut={(e) => (e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)')}
                         >
                           Anuluj
                         </button>
@@ -103,38 +159,67 @@ const Dashboard = () => {
           </>
         ) : user?.role === 'specialist' ? (
           <>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Panel specjalisty</h1>
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h2 className="text-xl font-semibold mb-2">Zarządzanie grafikiem</h2>
-              <p className="text-gray-500">Coming soon...</p>
+            <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '2rem', fontWeight: '700', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+              Panel specjalisty
+            </h1>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                Zarządzanie grafikiem
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Wkrótce...</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Nadchodzące rezerwacje</h2>
+
+            <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                Nadchodzące rezerwacje
+              </h2>
+
               {loading ? (
-                <div className="space-y-4">
+                <div style={{ display: 'grid', gap: '1rem' }}>
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="bg-white p-4 rounded-lg shadow-md animate-pulse">
-                      <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-300 rounded"></div>
+                    <div
+                      key={i}
+                      style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: '0.5rem',
+                        padding: '1rem',
+                        animation: 'pulse 2s infinite',
+                        opacity: 0.5,
+                      }}
+                    >
+                      <div style={{ height: '1rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem', marginBottom: '0.5rem' }}></div>
                     </div>
                   ))}
                 </div>
               ) : error ? (
-                <p className="text-red-500">{error}</p>
+                <div style={{ color: '#fca5a5' }}>{error}</div>
               ) : bookings.length === 0 ? (
-                <p className="text-gray-500">Brak rezerwacji</p>
+                <p style={{ color: 'var(--text-secondary)' }}>Brak rezerwacji</p>
               ) : (
-                <div className="space-y-4">
+                <div style={{ display: 'grid', gap: '1rem' }}>
                   {bookings.map((booking) => (
-                    <div key={booking.id} className="bg-white p-4 rounded-lg shadow-md">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-gray-600">{booking.owner_email}</p>
-                          <p className="text-gray-600">{booking.date} o {booking.time}</p>
-                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
-                        </div>
+                    <div key={booking.id} style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '0.5rem', padding: '1rem' }}>
+                      <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{booking.owner_email}</p>
+                      <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+                        {booking.date} o {booking.time}
+                      </p>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginTop: '0.5rem',
+                          padding: '0.25rem 0.75rem',
+                          backgroundColor: getStatusColor(booking.status).bg,
+                          color: getStatusColor(booking.status).text,
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: '500',
+                        }}
+                      >
+                        {getStatusIcon(booking.status)}
+                        {booking.status}
                       </div>
                     </div>
                   ))}
@@ -143,7 +228,7 @@ const Dashboard = () => {
             </div>
           </>
         ) : (
-          <p className="text-gray-500">Nieznana rola użytkownika</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Nieznana rola użytkownika</p>
         )}
       </div>
     </div>

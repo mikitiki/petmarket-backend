@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { PawPrint, LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -13,89 +13,128 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              🐾 PetMarket
-            </Link>
-          </div>
+    <nav style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '80px', gap: '2rem' }}>
+          {/* Logo */}
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flexShrink: 0 }}>
+            <PawPrint size={28} style={{ color: 'var(--accent)' }} />
+            <span style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.375rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+              PetMarket
+            </span>
+          </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/search" className="text-gray-600 hover:text-blue-600">
+          {/* Navigation Links */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flex: 1 }}>
+            <Link
+              to="/search"
+              style={{
+                color: 'var(--text-secondary)',
+                textDecoration: 'none',
+                fontSize: '0.95rem',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.target.style.color = 'var(--accent)')}
+              onMouseLeave={(e) => (e.target.style.color = 'var(--text-secondary)')}
+            >
               Znajdź specjalistę
             </Link>
+
+            {/* Separator */}
+            <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }}></div>
+
             {user ? (
-              <>
-                <span className="text-gray-600">{user.email}</span>
-                <Link to="/dashboard" className="text-gray-600 hover:text-blue-600">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginLeft: 'auto' }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
+                  {user.email}
+                </span>
+                <Link
+                  to="/dashboard"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    textDecoration: 'none',
+                    fontSize: '0.95rem',
+                    transition: 'color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = 'var(--accent)')}
+                  onMouseLeave={(e) => (e.target.style.color = 'var(--text-secondary)')}
+                >
                   Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-200"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'var(--accent)',
+                    color: '#0f0f0f',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    fontSize: '0.95rem',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'var(--accent-hover)';
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'var(--accent)';
+                    e.target.style.transform = 'scale(1)';
+                  }}
                 >
+                  <LogOut size={18} />
                   Wyloguj
                 </button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link to="/login" className="text-gray-600 hover:text-blue-600">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
+                <Link
+                  to="/login"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    textDecoration: 'none',
+                    fontSize: '0.95rem',
+                    transition: 'color 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.target.style.color = 'var(--accent)')}
+                  onMouseLeave={(e) => (e.target.style.color = 'var(--text-secondary)')}
+                >
                   Zaloguj
                 </Link>
-                <Link to="/register" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200">
+                <Link
+                  to="/register"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'var(--accent)',
+                    color: '#0f0f0f',
+                    textDecoration: 'none',
+                    borderRadius: '0.5rem',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'var(--accent-hover)';
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'var(--accent)';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
                   Zarejestruj się
                 </Link>
-              </>
+              </div>
             )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 hover:text-blue-600 focus:outline-none"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-              </svg>
-            </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="md:hidden pb-4">
-            <Link to="/search" className="block py-2 text-gray-600 hover:text-blue-600" onClick={() => setIsOpen(false)}>
-              Znajdź specjalistę
-            </Link>
-            {user ? (
-              <>
-                <span className="block py-2 text-gray-600">{user.email}</span>
-                <Link to="/dashboard" className="block py-2 text-gray-600 hover:text-blue-600" onClick={() => setIsOpen(false)}>
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => { handleLogout(); setIsOpen(false); }}
-                  className="block w-full text-left py-2 bg-red-500 text-white px-4 rounded-md hover:bg-red-600 transition duration-200 mt-2"
-                >
-                  Wyloguj
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="block py-2 text-gray-600 hover:text-blue-600" onClick={() => setIsOpen(false)}>
-                  Zaloguj
-                </Link>
-                <Link to="/register" className="block py-2 bg-blue-500 text-white px-4 rounded-md hover:bg-blue-600 transition duration-200 mt-2" onClick={() => setIsOpen(false)}>
-                  Zarejestruj się
-                </Link>
-              </>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );
