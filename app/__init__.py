@@ -20,15 +20,27 @@ def create_app():
 
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app)
+    cors_origins = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:3000",
+    ]
+    if os.getenv('FRONTEND_URL'):
+        cors_origins.append(os.getenv('FRONTEND_URL'))
+    CORS(app, resources={r"/api/*": {"origins": cors_origins}, r"/api/v1/*": {"origins": cors_origins}}, supports_credentials=True)
 
     from .auth import auth_bp
     from .specialists import specialists_bp
     from .bookings import bookings_bp
 
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(specialists_bp, url_prefix='/api/specialists')
-    app.register_blueprint(bookings_bp, url_prefix='/api/bookings')
+    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
+    app.register_blueprint(specialists_bp, url_prefix='/api/v1/specialists')
+    app.register_blueprint(bookings_bp, url_prefix='/api/v1/bookings')
 
     with app.app_context():
         db.create_all()
