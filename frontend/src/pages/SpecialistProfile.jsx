@@ -2,7 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getSpecialistById, createBooking } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle, User } from 'lucide-react';
+import { AlertCircle, CheckCircle, User, Calendar } from 'lucide-react';
+
+const TIME_SLOTS = [
+  '09:00', '10:00', '11:00', '12:00',
+  '13:00', '14:00', '15:00', '16:00', '17:00',
+];
+
+const todayDate = () => new Date().toISOString().split('T')[0];
+
+const inputStyle = {
+  width: '100%',
+  backgroundColor: '#1a1a1a',
+  border: '1px solid var(--border)',
+  color: 'var(--text-primary)',
+  borderRadius: '0.5rem',
+  padding: '0.75rem 1rem',
+  fontSize: '1rem',
+  boxSizing: 'border-box',
+};
 
 const SpecialistProfile = () => {
   const { id } = useParams();
@@ -13,8 +31,8 @@ const SpecialistProfile = () => {
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [bookedSlots, setBookedSlots] = useState(new Set());
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
 
   useEffect(() => {
     const fetchSpecialist = async () => {
@@ -32,49 +50,49 @@ const SpecialistProfile = () => {
     fetchSpecialist();
   }, [id]);
 
-  const handleBookSlot = (slot) => {
+  const handleOpenBooking = () => {
     if (!user) {
-      setBookingError('Zaloguj się, aby zarezerwować');
+      setBookingError('Zaloguj się, aby zarezerwować wizytę');
       return;
     }
     if (user.role !== 'owner') {
       setBookingError('Tylko właściciele zwierząt mogą rezerwować wizyty');
       return;
     }
-    setSelectedSlot(slot);
-    setShowModal(true);
+    if (!selectedDate || !selectedTime) {
+      setBookingError('Wybierz datę i godzinę przed rezerwacją');
+      return;
+    }
     setBookingError('');
     setBookingSuccess('');
+    setShowModal(true);
   };
 
   const confirmBooking = async () => {
     try {
       await createBooking({
         specialist_id: parseInt(id),
-        date: selectedSlot.date,
-        time: selectedSlot.time,
+        date: selectedDate,
+        time: selectedTime,
       });
-      setBookingSuccess('Wizyta zarezerwowana!');
-      setBookedSlots((prev) => new Set([...prev, selectedSlot.id]));
+      setBookingSuccess(`Wizyta zarezerwowana na ${selectedDate} o ${selectedTime}!`);
       setShowModal(false);
+      setSelectedDate('');
+      setSelectedTime('');
     } catch (err) {
-      setBookingError('Błąd podczas rezerwacji wizyty');
+      setBookingError(err.response?.data?.error || 'Błąd podczas rezerwacji wizyty');
+      setShowModal(false);
     }
   };
 
   if (loading) {
     return (
       <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
-        <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem', animation: 'pulse 2s infinite', opacity: 0.5 }}>
-          <div
-            style={{
-              width: '6rem',
-              height: '6rem',
-              backgroundColor: 'var(--border)',
-              borderRadius: '50%',
-              marginBottom: '1rem',
-            }}
-          ></div>
+        <div
+          className="max-w-2xl mx-auto"
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem', animation: 'pulse 2s infinite', opacity: 0.5 }}
+        >
+          <div style={{ width: '6rem', height: '6rem', backgroundColor: 'var(--border)', borderRadius: '50%', marginBottom: '1rem' }}></div>
           <div style={{ height: '1.5rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem', marginBottom: '0.5rem' }}></div>
           <div style={{ height: '1rem', backgroundColor: 'var(--border)', borderRadius: '0.25rem' }}></div>
         </div>
@@ -85,7 +103,10 @@ const SpecialistProfile = () => {
   if (error) {
     return (
       <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
-        <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+        <div
+          className="max-w-2xl mx-auto"
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fca5a5' }}>
             <AlertCircle size={20} />
             {error}
@@ -97,18 +118,17 @@ const SpecialistProfile = () => {
 
   return (
     <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: 'calc(100vh - 80px)', padding: '2rem' }}>
-      <div className="max-w-2xl mx-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}>
+      <div
+        className="max-w-2xl mx-auto"
+        style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1.5rem' }}
+      >
+        {/* Header — avatar + basic info */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', gap: '1.5rem' }}>
           {specialist.photo_url ? (
             <img
               src={specialist.photo_url}
               alt={specialist.name}
-              style={{
-                width: '6rem',
-                height: '6rem',
-                borderRadius: '50%',
-                objectFit: 'cover',
-              }}
+              style={{ width: '6rem', height: '6rem', borderRadius: '50%', objectFit: 'cover' }}
             />
           ) : (
             <div
@@ -120,6 +140,7 @@ const SpecialistProfile = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <User size={32} style={{ color: 'var(--text-secondary)' }} />
@@ -138,61 +159,88 @@ const SpecialistProfile = () => {
           </div>
         </div>
 
+        {/* Bio */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
             O mnie
           </h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            {specialist.bio}
+            {specialist.bio || 'Brak opisu.'}
           </p>
         </div>
 
+        {/* Booking form */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-            Dostępne terminy
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Calendar size={20} />
+            Zarezerwuj wizytę
           </h2>
-          {specialist.available_slots && specialist.available_slots.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {specialist.available_slots.map((slot) => (
-                <button
-                  key={slot.id}
-                  onClick={() => handleBookSlot(slot)}
-                  disabled={bookedSlots.has(slot.id)}
-                  style={{
-                    padding: '0.75rem',
-                    border: '1px solid',
-                    borderRadius: '0.5rem',
-                    textAlign: 'center',
-                    cursor: bookedSlots.has(slot.id) ? 'not-allowed' : 'pointer',
-                    backgroundColor: bookedSlots.has(slot.id) ? 'var(--bg-secondary)' : 'var(--bg-secondary)',
-                    borderColor: bookedSlots.has(slot.id) ? 'var(--border)' : 'var(--accent)',
-                    color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--accent)',
-                    opacity: bookedSlots.has(slot.id) ? 0.5 : 1,
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    if (!bookedSlots.has(slot.id)) {
-                      e.target.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.backgroundColor = 'var(--bg-secondary)';
-                  }}
+
+          {user?.role === 'owner' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  min={todayDate()}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  style={inputStyle}
+                  onFocus={(e) => (e.target.style.borderColor = 'var(--accent)')}
+                  onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
+                  Godzina
+                </label>
+                <select
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  onFocus={(e) => (e.target.style.borderColor = 'var(--accent)')}
+                  onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
                 >
-                  <div style={{ fontWeight: '600', color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-                    {slot.date}
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: bookedSlots.has(slot.id) ? 'var(--text-secondary)' : 'var(--accent)' }}>
-                    {slot.time}
-                  </div>
-                </button>
-              ))}
+                  <option value="">Wybierz godzinę</option>
+                  {TIME_SLOTS.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={handleOpenBooking}
+                style={{
+                  backgroundColor: 'var(--accent)',
+                  color: '#0f0f0f',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  border: 'none',
+                  transition: 'all 0.2s ease',
+                  alignSelf: 'flex-start',
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = 'var(--accent-hover)')}
+                onMouseOut={(e) => (e.target.style.backgroundColor = 'var(--accent)')}
+              >
+                Zarezerwuj
+              </button>
             </div>
           ) : (
-            <p style={{ color: 'var(--text-secondary)' }}>Brak dostępnych terminów</p>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              {user
+                ? 'Tylko właściciele zwierząt mogą rezerwować wizyty.'
+                : 'Zaloguj się jako właściciel, aby zarezerwować wizytę.'}
+            </p>
           )}
         </div>
 
+        {/* Feedback messages */}
         {bookingError && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', backgroundColor: 'rgba(220, 38, 38, 0.1)', borderRadius: '0.5rem', color: '#fca5a5', marginBottom: '1rem' }}>
             <AlertCircle size={18} />
@@ -207,7 +255,7 @@ const SpecialistProfile = () => {
         )}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Confirmation modal */}
       {showModal && (
         <div
           style={{
@@ -235,7 +283,9 @@ const SpecialistProfile = () => {
               Potwierdź rezerwację
             </h3>
             <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-              Czy chcesz zarezerwować wizytę dnia {selectedSlot?.date} o {selectedSlot?.time}?
+              Czy chcesz zarezerwować wizytę u <strong style={{ color: 'var(--text-primary)' }}>{specialist?.name}</strong>{' '}
+              dnia <strong style={{ color: 'var(--text-primary)' }}>{selectedDate}</strong>{' '}
+              o <strong style={{ color: 'var(--text-primary)' }}>{selectedTime}</strong>?
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <button

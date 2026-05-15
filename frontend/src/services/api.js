@@ -67,4 +67,9 @@ export const cancelBooking = async (id) => {
   return response.data;
 };
 
+export const updateBookingStatus = async (id, status) => {
+  const response = await api.patch(`/bookings/${id}/status`, { status });
+  return response.data;
+};
+
 export default api;
