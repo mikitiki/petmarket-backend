@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyBookings, cancelBooking, updateBookingStatus } from '../services/api';
-import { Clock, AlertCircle, CheckCircle, X, Calendar } from 'lucide-react';
+import { getMyBookings, cancelBooking, updateBookingStatus, getMyServices, addService, deleteService } from '../services/api';
+import { Clock, AlertCircle, CheckCircle, X, Calendar, Stethoscope, Plus, Trash2 } from 'lucide-react';
 
 const STATUS_COLORS = {
   oczekująca:  { bg: 'rgba(245, 158, 11, 0.1)',  text: '#f59e0b' },
@@ -88,8 +88,16 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
 
+  // services state (specialist only)
+  const [services, setServices] = useState([]);
+  const [showAddService, setShowAddService] = useState(false);
+  const [serviceForm, setServiceForm] = useState({ name: '', description: '', price: '', duration: '60' });
+  const [serviceError, setServiceError] = useState('');
+  const [serviceLoading, setServiceLoading] = useState(false);
+
   useEffect(() => {
     fetchBookings();
+    if (user?.role === 'specialist') fetchServices();
   }, []);
 
   const fetchBookings = async () => {
@@ -122,6 +130,49 @@ const Dashboard = () => {
       fetchBookings();
     } catch {
       setActionError('Nie udało się zmienić statusu rezerwacji');
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const data = await getMyServices();
+      setServices(data);
+    } catch {
+      // silently fail — endpoint may not exist yet on backend
+    }
+  };
+
+  const handleAddService = async (e) => {
+    e.preventDefault();
+    setServiceError('');
+    if (!serviceForm.name || !serviceForm.price) {
+      setServiceError('Nazwa i cena są wymagane');
+      return;
+    }
+    setServiceLoading(true);
+    try {
+      await addService({
+        name: serviceForm.name,
+        description: serviceForm.description,
+        price: parseFloat(serviceForm.price),
+        duration: parseInt(serviceForm.duration) || 60,
+      });
+      setServiceForm({ name: '', description: '', price: '', duration: '60' });
+      setShowAddService(false);
+      fetchServices();
+    } catch (err) {
+      setServiceError(err.response?.data?.error || 'Nie udało się dodać usługi');
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const handleDeleteService = async (id) => {
+    try {
+      await deleteService(id);
+      fetchServices();
+    } catch {
+      setServiceError('Nie udało się usunąć usługi');
     }
   };
 
@@ -227,6 +278,93 @@ const Dashboard = () => {
               {actionError}
             </div>
           )}
+
+          {/* ── Moje usługi ── */}
+          <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: services.length > 0 || showAddService ? '1rem' : 0 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                <Stethoscope size={20} />
+                Moje usługi
+              </h2>
+              <button
+                onClick={() => { setShowAddService(!showAddService); setServiceError(''); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  backgroundColor: showAddService ? 'var(--bg-secondary)' : 'var(--accent)',
+                  color: showAddService ? 'var(--text-secondary)' : '#0f0f0f',
+                  border: 'none', borderRadius: '0.5rem', padding: '0.4rem 0.9rem',
+                  fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer',
+                }}
+              >
+                <Plus size={16} />
+                {showAddService ? 'Anuluj' : 'Dodaj usługę'}
+              </button>
+            </div>
+
+            {showAddService && (
+              <form onSubmit={handleAddService} style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem', display: 'grid', gap: '0.75rem' }}>
+                {serviceError && (
+                  <p style={{ color: '#fca5a5', margin: 0, fontSize: '0.875rem' }}>{serviceError}</p>
+                )}
+                <input
+                  type="text" placeholder="Nazwa usługi *" value={serviceForm.name}
+                  onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.6rem 0.9rem', fontSize: '0.95rem' }}
+                />
+                <input
+                  type="text" placeholder="Opis (opcjonalnie)" value={serviceForm.description}
+                  onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.6rem 0.9rem', fontSize: '0.95rem' }}
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <input
+                    type="number" placeholder="Cena (zł) *" min="0" step="0.01" value={serviceForm.price}
+                    onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })}
+                    style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.6rem 0.9rem', fontSize: '0.95rem' }}
+                  />
+                  <input
+                    type="number" placeholder="Czas trwania (min)" min="1" value={serviceForm.duration}
+                    onChange={(e) => setServiceForm({ ...serviceForm, duration: e.target.value })}
+                    style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.6rem 0.9rem', fontSize: '0.95rem' }}
+                  />
+                </div>
+                <button
+                  type="submit" disabled={serviceLoading}
+                  style={{ backgroundColor: 'var(--accent)', color: '#0f0f0f', border: 'none', borderRadius: '0.5rem', padding: '0.6rem 1.2rem', fontWeight: '600', cursor: serviceLoading ? 'not-allowed' : 'pointer', alignSelf: 'flex-start', opacity: serviceLoading ? 0.7 : 1 }}
+                >
+                  {serviceLoading ? 'Dodawanie...' : 'Zapisz usługę'}
+                </button>
+              </form>
+            )}
+
+            {services.length === 0 && !showAddService ? (
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Brak usług — dodaj pierwszą klikając przycisk powyżej.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {services.map((svc) => (
+                  <div key={svc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '0.5rem', padding: '0.75rem 1rem', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ color: 'var(--text-primary)', fontWeight: '600', margin: '0 0 0.15rem 0' }}>{svc.name}</p>
+                      {svc.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0 }}>{svc.description}</p>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{svc.duration} min</span>
+                      <span style={{ color: 'var(--accent)', fontWeight: '700' }}>{svc.price} zł</span>
+                      <button
+                        onClick={() => handleDeleteService(svc.id)}
+                        title="Usuń usługę"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '0.2rem', display: 'flex', alignItems: 'center' }}
+                        onMouseOver={(e) => (e.currentTarget.style.color = '#fca5a5')}
+                        onMouseOut={(e) => (e.currentTarget.style.color = '#dc2626')}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <LoadingSkeleton />

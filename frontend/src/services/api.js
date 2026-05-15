@@ -72,4 +72,30 @@ export const updateBookingStatus = async (id, status) => {
   return response.data;
 };
 
+// SERVICES
+export const getSpecialistServices = async (specialistId) => {
+  const response = await api.get(`/services/specialist/${specialistId}`);
+  return response.data;
+};
+
+export const getMyServices = async () => {
+  const response = await api.get('/services/mine');
+  return response.data;
+};
+
+export const addService = async ({ name, description, price, duration }) => {
+  const response = await api.post('/services/', { name, description, price, duration });
+  return response.data;
+};
+
+export const updateService = async (id, data) => {
+  const response = await api.put(`/services/${id}`, data);
+  return response.data;
+};
+
+export const deleteService = async (id) => {
+  const response = await api.delete(`/services/${id}`);
+  return response.data;
+};
+
 export default api;

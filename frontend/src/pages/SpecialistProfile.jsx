@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getSpecialistById, createBooking } from '../services/api';
+import { getSpecialistById, createBooking, getSpecialistServices } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, CheckCircle, User, Calendar } from 'lucide-react';
+import { AlertCircle, CheckCircle, User, Calendar, Stethoscope, Clock, BadgeDollarSign } from 'lucide-react';
 
 const TIME_SLOTS = [
   '09:00', '10:00', '11:00', '12:00',
@@ -33,14 +33,19 @@ const SpecialistProfile = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [services, setServices] = useState([]);
 
   useEffect(() => {
     const fetchSpecialist = async () => {
       setLoading(true);
       setError('');
       try {
-        const data = await getSpecialistById(id);
+        const [data, svcData] = await Promise.all([
+          getSpecialistById(id),
+          getSpecialistServices(id).catch(() => []),
+        ]);
         setSpecialist(data);
+        setServices(svcData);
       } catch (err) {
         setError('Nie udało się wczytać profilu specjalisty');
       } finally {
@@ -167,6 +172,57 @@ const SpecialistProfile = () => {
           <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
             {specialist.bio || 'Brak opisu.'}
           </p>
+        </div>
+
+        {/* Services */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Stethoscope size={20} />
+            Usługi
+          </h2>
+          {services.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)' }}>Brak dostępnych usług</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {services.map((svc) => (
+                <div
+                  key={svc.id}
+                  style={{
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: 'var(--text-primary)', fontWeight: '600', margin: '0 0 0.25rem 0' }}>
+                      {svc.name}
+                    </p>
+                    {svc.description && (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+                        {svc.description}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexShrink: 0 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                      <Clock size={14} />
+                      {svc.duration} min
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent)', fontWeight: '700', fontSize: '1rem' }}>
+                      <BadgeDollarSign size={16} />
+                      {svc.price} zł
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Booking form */}
