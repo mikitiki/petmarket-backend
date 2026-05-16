@@ -37,3 +37,15 @@ class Booking(db.Model):
 
     specialist = db.relationship('SpecialistProfile', backref='bookings')
     owner = db.relationship('User', foreign_keys=[owner_id])
+
+class Service(db.Model):
+    __tablename__ = 'services'
+
+    id             = db.Column(db.Integer, primary_key=True)
+    specialist_id  = db.Column(db.Integer, db.ForeignKey('specialist_profiles.id'), nullable=False)
+    name           = db.Column(db.String(100), nullable=False)
+    description    = db.Column(db.Text, default='')
+    price          = db.Column(db.Float, nullable=False)
+    duration       = db.Column(db.Integer, default=60)
+
+    specialist = db.relationship('SpecialistProfile', backref='services')
