@@ -72,6 +72,16 @@ export const updateBookingStatus = async (id, status) => {
   return response.data;
 };
 
+// PHOTO
+export const uploadPhoto = async (file) => {
+  const formData = new FormData();
+  formData.append('photo', file);
+  const response = await api.post('/specialists/me/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
 // SERVICES
 export const getSpecialistServices = async (specialistId) => {
   const response = await api.get(`/services/specialist/${specialistId}`);

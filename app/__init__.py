@@ -32,15 +32,21 @@ def create_app():
     ]
     if os.getenv('FRONTEND_URL'):
         cors_origins.append(os.getenv('FRONTEND_URL'))
-    CORS(app, resources={r"/api/*": {"origins": cors_origins}, r"/api/v1/*": {"origins": cors_origins}}, supports_credentials=True)
+    CORS(app, resources={
+        r"/api/*": {"origins": cors_origins},
+        r"/api/v1/*": {"origins": cors_origins},
+        r"/static/*": {"origins": cors_origins},
+    }, supports_credentials=True)
 
     from .auth import auth_bp
     from .specialists import specialists_bp
     from .bookings import bookings_bp
+    from .services import services_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(specialists_bp, url_prefix='/api/v1/specialists')
     app.register_blueprint(bookings_bp, url_prefix='/api/v1/bookings')
+    app.register_blueprint(services_bp, url_prefix='/api/v1/services')
 
     with app.app_context():
         db.create_all()
