@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from . import db
-from .models import Booking, SpecialistProfile, User
+from .models import Booking, SpecialistProfile, User, Service
 
 bookings_bp = Blueprint('bookings', __name__)
 
@@ -23,18 +23,22 @@ def create_booking():
     specialist_id = data.get('specialist_id')
     date = data.get('date')
     time = data.get('time')
+    service_id = data.get('service_id')
 
     if not specialist_id or not date or not time:
         return jsonify({'error': 'Podaj specialist_id, date i time'}), 400
 
-    # Sprawdź czy specjalista istnieje
     specialist = SpecialistProfile.query.get(specialist_id)
     if not specialist:
         return jsonify({'error': 'Specjalista nie istnieje'}), 404
 
+    if service_id:
+        svc = Service.query.get(service_id)
+        if not svc or svc.specialist_id != specialist_id:
+            return jsonify({'error': 'Nieprawidłowa usługa'}), 400
+
     owner_id = int(get_jwt_identity())
 
-    # Zapobiegaj podwójnej rezerwacji tego samego terminu u tego specjalisty
     existing = Booking.query.filter_by(
         specialist_id=specialist_id,
         date=date,
@@ -47,6 +51,7 @@ def create_booking():
     booking = Booking(
         owner_id=owner_id,
         specialist_id=specialist_id,
+        service_id=service_id or None,
         date=date,
         time=time,
         status='oczekująca'
@@ -80,6 +85,7 @@ def get_my_bookings():
                 'id': b.id,
                 'specialist_id': b.specialist_id,
                 'specialist_name': b.specialist.name if b.specialist else 'Nieznany',
+                'service_name': b.service.name if b.service else None,
                 'date': b.date,
                 'time': b.time,
                 'status': b.status,
@@ -100,6 +106,7 @@ def get_my_bookings():
                 'id': b.id,
                 'owner_id': b.owner_id,
                 'owner_email': owner.email if owner else 'Nieznany',
+                'service_name': b.service.name if b.service else None,
                 'date': b.date,
                 'time': b.time,
                 'status': b.status,
@@ -107,6 +114,25 @@ def get_my_bookings():
         return jsonify(result), 200
 
     return jsonify({'error': 'Nieznana rola'}), 400
+
+
+# ──────────────────────────────────────────────────────────────
+# GET /bookings/slots?specialist_id=X&date=YYYY-MM-DD  — zajęte godziny (publiczny)
+# ──────────────────────────────────────────────────────────────
+@bookings_bp.route('/slots', methods=['GET'])
+def get_booked_slots():
+    specialist_id = request.args.get('specialist_id', type=int)
+    date = request.args.get('date')
+
+    if not specialist_id or not date:
+        return jsonify({'error': 'Podaj specialist_id i date'}), 400
+
+    booked = Booking.query.filter_by(
+        specialist_id=specialist_id,
+        date=date
+    ).filter(Booking.status != 'anulowana').all()
+
+    return jsonify([b.time for b in booked]), 200
 
 
 # ──────────────────────────────────────────────────────────────

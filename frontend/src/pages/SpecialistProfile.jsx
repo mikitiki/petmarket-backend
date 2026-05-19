@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getSpecialistById, createBooking, getSpecialistServices } from '../services/api';
+import { getSpecialistById, createBooking, getSpecialistServices, getBookedSlots } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { AlertCircle, CheckCircle, User, Calendar, Stethoscope, Clock, BadgeDollarSign } from 'lucide-react';
 
@@ -10,6 +10,12 @@ const TIME_SLOTS = [
 ];
 
 const todayDate = () => new Date().toISOString().split('T')[0];
+
+const maxDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString().split('T')[0];
+};
 
 const inputStyle = {
   width: '100%',
@@ -34,6 +40,8 @@ const SpecialistProfile = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [services, setServices] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [selectedService, setSelectedService] = useState('');
 
   useEffect(() => {
     const fetchSpecialist = async () => {
@@ -55,6 +63,19 @@ const SpecialistProfile = () => {
     fetchSpecialist();
   }, [id]);
 
+  const handleDateChange = async (date) => {
+    setSelectedDate(date);
+    setSelectedTime('');
+    if (date && specialist) {
+      try {
+        const slots = await getBookedSlots(specialist.id, date);
+        setBookedSlots(slots);
+      } catch {
+        setBookedSlots([]);
+      }
+    }
+  };
+
   const handleOpenBooking = () => {
     if (!user) {
       setBookingError('Zaloguj się, aby zarezerwować wizytę');
@@ -62,6 +83,10 @@ const SpecialistProfile = () => {
     }
     if (user.role !== 'owner') {
       setBookingError('Tylko właściciele zwierząt mogą rezerwować wizyty');
+      return;
+    }
+    if (services.length > 0 && !selectedService) {
+      setBookingError('Wybierz usługę przed rezerwacją');
       return;
     }
     if (!selectedDate || !selectedTime) {
@@ -79,11 +104,13 @@ const SpecialistProfile = () => {
         specialist_id: parseInt(id),
         date: selectedDate,
         time: selectedTime,
+        service_id: selectedService ? parseInt(selectedService) : undefined,
       });
       setBookingSuccess(`Wizyta zarezerwowana na ${selectedDate} o ${selectedTime}!`);
       setShowModal(false);
       setSelectedDate('');
       setSelectedTime('');
+      setSelectedService('');
     } catch (err) {
       setBookingError(err.response?.data?.error || 'Błąd podczas rezerwacji wizyty');
       setShowModal(false);
@@ -234,6 +261,27 @@ const SpecialistProfile = () => {
 
           {user?.role === 'owner' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {services.length > 0 && (
+                <div>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
+                    Usługa
+                  </label>
+                  <select
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                    onFocus={(e) => (e.target.style.borderColor = 'var(--accent)')}
+                    onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
+                  >
+                    <option value="">-- wybierz usługę --</option>
+                    {services.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {s.duration} min — {s.price} zł
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
                   Data
@@ -242,7 +290,8 @@ const SpecialistProfile = () => {
                   type="date"
                   value={selectedDate}
                   min={todayDate()}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  max={maxDate()}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   style={inputStyle}
                   onFocus={(e) => (e.target.style.borderColor = 'var(--accent)')}
                   onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
@@ -260,8 +309,8 @@ const SpecialistProfile = () => {
                   onFocus={(e) => (e.target.style.borderColor = 'var(--accent)')}
                   onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
                 >
-                  <option value="">Wybierz godzinę</option>
-                  {TIME_SLOTS.map((t) => (
+                  <option value="">-- wybierz godzinę --</option>
+                  {TIME_SLOTS.filter((t) => !bookedSlots.includes(t)).map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>

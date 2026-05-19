@@ -42,7 +42,7 @@ export const getSpecialists = async ({ city, specialization } = {}) => {
   const params = {};
   if (city) params.city = city;
   if (specialization) params.specialization = specialization;
-  const response = await api.get('/specialists', { params });
+  const response = await api.get('/specialists/', { params });
   return response.data;
 };
 
@@ -52,8 +52,13 @@ export const getSpecialistById = async (id) => {
 };
 
 // BOOKINGS
-export const createBooking = async ({ specialist_id, date, time }) => {
-  const response = await api.post('/bookings', { specialist_id, date, time });
+export const createBooking = async ({ specialist_id, date, time, service_id }) => {
+  const response = await api.post('/bookings/', { specialist_id, date, time, service_id });
+  return response.data;
+};
+
+export const getBookedSlots = async (specialistId, date) => {
+  const response = await api.get('/bookings/slots', { params: { specialist_id: specialistId, date } });
   return response.data;
 };
 
