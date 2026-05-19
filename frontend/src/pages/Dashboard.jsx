@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyBookings, cancelBooking, updateBookingStatus, getMyServices, addService, deleteService, uploadPhoto } from '../services/api';
-import { Clock, AlertCircle, CheckCircle, X, Calendar, Stethoscope, Plus, Trash2, Camera, User } from 'lucide-react';
+import { getMyBookings, cancelBooking, updateBookingStatus, getMyServices, addService, deleteService, uploadPhoto, getMyProfile, createProfile, updateProfile } from '../services/api';
+import { Clock, AlertCircle, CheckCircle, X, Calendar, Stethoscope, Plus, Trash2, Camera, User, Pencil } from 'lucide-react';
 
 const STATUS_COLORS = {
   oczekująca:  { bg: 'rgba(245, 158, 11, 0.1)',  text: '#f59e0b' },
@@ -88,6 +88,14 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
 
+  // specialist profile state
+  const [myProfile, setMyProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', city: '', specialization: '', bio: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
   // photo state (specialist only)
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoUploading, setPhotoUploading] = useState(false);
@@ -102,7 +110,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchBookings();
-    if (user?.role === 'specialist') fetchServices();
+    if (user?.role === 'specialist') {
+      fetchServices();
+      fetchMyProfile();
+    }
   }, []);
 
   const fetchBookings = async () => {
@@ -135,6 +146,46 @@ const Dashboard = () => {
       fetchBookings();
     } catch {
       setActionError('Nie udało się zmienić statusu rezerwacji');
+    }
+  };
+
+  const fetchMyProfile = async () => {
+    try {
+      const data = await getMyProfile();
+      setMyProfile(data);
+      if (data) {
+        setProfileForm({ name: data.name, city: data.city, specialization: data.specialization, bio: data.bio || '' });
+        setPhotoPreview(data.photo_url || null);
+      } else {
+        setShowProfileForm(true);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setProfileLoaded(true);
+    }
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    if (!profileForm.name || !profileForm.city || !profileForm.specialization) {
+      setProfileError('Imię/nazwa, miasto i specjalizacja są wymagane');
+      return;
+    }
+    setProfileSaving(true);
+    try {
+      if (myProfile) {
+        await updateProfile(myProfile.id, profileForm);
+      } else {
+        await createProfile(profileForm);
+      }
+      await fetchMyProfile();
+      setShowProfileForm(false);
+    } catch (err) {
+      setProfileError(err.response?.data?.error || 'Błąd podczas zapisywania profilu');
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -301,6 +352,72 @@ const Dashboard = () => {
               {actionError}
             </div>
           )}
+
+          {/* ── Mój profil ── */}
+          <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', margin: 0 }}>
+                Mój profil
+              </h2>
+              {myProfile && !showProfileForm && (
+                <button onClick={() => setShowProfileForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: '0.5rem', padding: '0.4rem 0.8rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <Pencil size={14} /> Edytuj
+                </button>
+              )}
+            </div>
+
+            {!profileLoaded ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Ładowanie...</p>
+            ) : myProfile && !showProfileForm ? (
+              <div style={{ display: 'grid', gap: '0.4rem' }}>
+                <p style={{ color: 'var(--text-primary)', fontWeight: '600', margin: 0 }}>{myProfile.name}</p>
+                <p style={{ color: 'var(--accent)', margin: 0 }}>{myProfile.specialization}</p>
+                <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{myProfile.city}</p>
+                {myProfile.bio && <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>{myProfile.bio}</p>}
+              </div>
+            ) : (
+              <form onSubmit={handleProfileSave} style={{ display: 'grid', gap: '0.75rem' }}>
+                {!myProfile && <p style={{ color: '#f59e0b', margin: 0, fontSize: '0.9rem' }}>Nie masz jeszcze profilu — wypełnij dane żeby zacząć.</p>}
+                {profileError && <p style={{ color: '#fca5a5', margin: 0, fontSize: '0.875rem' }}>{profileError}</p>}
+                {[
+                  { key: 'name', placeholder: 'Imię i nazwisko / nazwa gabinetu *' },
+                  { key: 'city', placeholder: 'Miasto *' },
+                ].map(({ key, placeholder }) => (
+                  <input key={key} type="text" placeholder={placeholder} value={profileForm[key]}
+                    onChange={(e) => setProfileForm({ ...profileForm, [key]: e.target.value })}
+                    style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.65rem 0.9rem', fontSize: '0.95rem' }}
+                  />
+                ))}
+                <select value={profileForm.specialization}
+                  onChange={(e) => setProfileForm({ ...profileForm, specialization: e.target.value })}
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: profileForm.specialization ? 'var(--text-primary)' : 'var(--text-secondary)', borderRadius: '0.5rem', padding: '0.65rem 0.9rem', fontSize: '0.95rem', cursor: 'pointer' }}
+                >
+                  <option value="">Wybierz specjalizację *</option>
+                  <option value="Weterynarz">Weterynarz</option>
+                  <option value="Behawiorysta">Behawiorysta</option>
+                  <option value="Groomer">Groomer</option>
+                  <option value="Inny">Inny</option>
+                </select>
+                <textarea placeholder="Opis (opcjonalnie)" value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  rows={3}
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '0.5rem', padding: '0.65rem 0.9rem', fontSize: '0.95rem', resize: 'vertical' }}
+                />
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button type="submit" disabled={profileSaving}
+                    style={{ backgroundColor: 'var(--accent)', color: '#0f0f0f', border: 'none', borderRadius: '0.5rem', padding: '0.6rem 1.2rem', fontWeight: '600', cursor: profileSaving ? 'not-allowed' : 'pointer', opacity: profileSaving ? 0.7 : 1 }}>
+                    {profileSaving ? 'Zapisywanie...' : 'Zapisz profil'}
+                  </button>
+                  {myProfile && (
+                    <button type="button" onClick={() => { setShowProfileForm(false); setProfileError(''); }}
+                      style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: '0.5rem', padding: '0.6rem 1.2rem', cursor: 'pointer' }}>
+                      Anuluj
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
+          </div>
 
           {/* ── Zdjęcie profilowe ── */}
           <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>

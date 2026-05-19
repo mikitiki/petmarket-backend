@@ -72,6 +72,21 @@ export const updateBookingStatus = async (id, status) => {
   return response.data;
 };
 
+export const getMyProfile = async () => {
+  const response = await api.get('/specialists/me');
+  return response.data;
+};
+
+export const createProfile = async ({ name, city, specialization, bio }) => {
+  const response = await api.post('/specialists/', { name, city, specialization, bio });
+  return response.data;
+};
+
+export const updateProfile = async (id, { name, city, specialization, bio }) => {
+  const response = await api.put(`/specialists/${id}`, { name, city, specialization, bio });
+  return response.data;
+};
+
 // PHOTO
 export const uploadPhoto = async (file) => {
   const formData = new FormData();
