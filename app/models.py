@@ -31,13 +31,15 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     specialist_id = db.Column(db.Integer, db.ForeignKey('specialist_profiles.id'), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
     date = db.Column(db.String(20), nullable=False)
     time = db.Column(db.String(10), nullable=False)
-    status = db.Column(db.String(20), default='pending')
+    status = db.Column(db.String(20), default='oczekująca')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     specialist = db.relationship('SpecialistProfile', backref='bookings')
     owner = db.relationship('User', foreign_keys=[owner_id])
+    service = db.relationship('Service', foreign_keys=[service_id])
 
 class Service(db.Model):
     __tablename__ = 'services'

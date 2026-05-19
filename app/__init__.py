@@ -11,7 +11,10 @@ db = SQLAlchemy()
 jwt = JWTManager()
 
 def create_app():
-    app = Flask(__name__)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    app = Flask(__name__,
+                static_folder=os.path.join(project_root, 'static'),
+                static_url_path='/static')
 
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
