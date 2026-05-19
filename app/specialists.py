@@ -100,6 +100,26 @@ def update_profile(specialist_id):
     return jsonify({'message': 'Profil zaktualizowany'}), 200
 
 
+@specialists_bp.route('/me', methods=['GET'])
+@jwt_required()
+def get_my_profile():
+    claims = get_jwt()
+    if claims.get('role') != 'specialist':
+        return jsonify({'error': 'Tylko specjalista'}), 403
+    user_id = int(get_jwt_identity())
+    profile = SpecialistProfile.query.filter_by(user_id=user_id).first()
+    if not profile:
+        return jsonify(None), 200
+    return jsonify({
+        'id': profile.id,
+        'name': profile.name,
+        'city': profile.city,
+        'specialization': profile.specialization,
+        'bio': profile.bio,
+        'photo_url': profile.photo_url or ''
+    }), 200
+
+
 @specialists_bp.route('/me/photo', methods=['POST'])
 @jwt_required()
 def upload_photo():
