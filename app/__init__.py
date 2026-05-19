@@ -32,7 +32,11 @@ def create_app():
     ]
     if os.getenv('FRONTEND_URL'):
         cors_origins.append(os.getenv('FRONTEND_URL'))
-    CORS(app, resources={r"/api/*": {"origins": cors_origins}, r"/api/v1/*": {"origins": cors_origins}}, supports_credentials=True)
+    CORS(app, resources={
+        r"/api/*": {"origins": cors_origins},
+        r"/api/v1/*": {"origins": cors_origins},
+        r"/static/*": {"origins": cors_origins},
+    }, supports_credentials=True)
 
     from .auth import auth_bp
     from .specialists import specialists_bp

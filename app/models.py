@@ -22,6 +22,7 @@ class SpecialistProfile(db.Model):
     city = db.Column(db.String(100), nullable=False)
     specialization = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.Text, default='')
+    photo_url = db.Column(db.String(255), default='')
 
 
 class Booking(db.Model):

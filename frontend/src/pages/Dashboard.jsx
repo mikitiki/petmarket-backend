@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyBookings, cancelBooking, updateBookingStatus, getMyServices, addService, deleteService } from '../services/api';
-import { Clock, AlertCircle, CheckCircle, X, Calendar, Stethoscope, Plus, Trash2 } from 'lucide-react';
+import { getMyBookings, cancelBooking, updateBookingStatus, getMyServices, addService, deleteService, uploadPhoto } from '../services/api';
+import { Clock, AlertCircle, CheckCircle, X, Calendar, Stethoscope, Plus, Trash2, Camera, User } from 'lucide-react';
 
 const STATUS_COLORS = {
   oczekująca:  { bg: 'rgba(245, 158, 11, 0.1)',  text: '#f59e0b' },
@@ -88,6 +88,11 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
 
+  // photo state (specialist only)
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMessage, setPhotoMessage] = useState('');
+
   // services state (specialist only)
   const [services, setServices] = useState([]);
   const [showAddService, setShowAddService] = useState(false);
@@ -130,6 +135,24 @@ const Dashboard = () => {
       fetchBookings();
     } catch {
       setActionError('Nie udało się zmienić statusu rezerwacji');
+    }
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoUploading(true);
+    setPhotoMessage('');
+    try {
+      const data = await uploadPhoto(file);
+      setPhotoMessage('Zdjęcie zaktualizowane!');
+      setPhotoPreview(data.photo_url);
+    } catch (err) {
+      setPhotoMessage(err.response?.data?.error || 'Błąd podczas przesyłania zdjęcia');
+      setPhotoPreview(null);
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -278,6 +301,47 @@ const Dashboard = () => {
               {actionError}
             </div>
           )}
+
+          {/* ── Zdjęcie profilowe ── */}
+          <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <Camera size={20} />
+              Zdjęcie profilowe
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+              {photoPreview ? (
+                <img src={photoPreview} alt="Profil" style={{ width: '5rem', height: '5rem', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }} />
+              ) : (
+                <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--border)' }}>
+                  <User size={28} style={{ color: 'var(--text-secondary)' }} />
+                </div>
+              )}
+              <div>
+                <label style={{
+                  display: 'inline-block', cursor: 'pointer',
+                  backgroundColor: 'var(--accent)', color: '#0f0f0f',
+                  padding: '0.5rem 1.1rem', borderRadius: '0.5rem',
+                  fontWeight: '600', fontSize: '0.9rem',
+                  opacity: photoUploading ? 0.6 : 1,
+                }}>
+                  {photoUploading ? 'Przesyłanie...' : 'Wybierz zdjęcie'}
+                  <input
+                    type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                    onChange={handlePhotoChange} disabled={photoUploading}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0.4rem 0 0 0' }}>
+                  JPG, PNG, GIF lub WebP
+                </p>
+                {photoMessage && (
+                  <p style={{ color: photoMessage.includes('Błąd') ? '#fca5a5' : '#86efac', fontSize: '0.85rem', margin: '0.4rem 0 0 0' }}>
+                    {photoMessage}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* ── Moje usługi ── */}
           <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
