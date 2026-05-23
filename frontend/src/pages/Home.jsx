@@ -10,10 +10,10 @@ const Home = () => {
       {/* Hero Section */}
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 'clamp(2.5rem, 8vw, 5rem)', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 'clamp(2rem, 5vw, 4rem)', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--text-primary)', textAlign: 'center' }}>
             Znajdź specjalistę dla swojego pupila
           </h1>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '36rem', margin: '0 auto 2rem' }}>
+          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '36rem', margin: '0 auto 2rem', textAlign: 'center' }}>
             Łatwo znajdź weterynarzy, behawiorystów, groomerów i innych specjalistów opieki nad zwierzętami w Twojej okolicy.
           </p>
           <button
@@ -23,7 +23,7 @@ const Home = () => {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              padding: '0.5rem 1.5rem',
+              padding: '0.75rem 2rem',
               backgroundColor: 'var(--accent)',
               color: '#0f0f0f',
               borderRadius: '0.5rem',
@@ -32,6 +32,7 @@ const Home = () => {
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              margin: '0 auto',
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = 'var(--accent-hover)';
