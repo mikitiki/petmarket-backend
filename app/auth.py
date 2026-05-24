@@ -18,9 +18,18 @@ def register():
         return jsonify({'error': 'Rola musi byc owner lub specialist'}), 400
 
     if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Ten email jest juz zajety'}), 409
+        return jsonify({'error': 'Ten email jest już zajęty'}), 409
 
-    hashed = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    password = data['password']
+    import re
+    if len(password) < 8:
+        return jsonify({'error': 'Hasło musi mieć co najmniej 8 znaków'}), 400
+    if not re.search(r'[A-Z]', password):
+        return jsonify({'error': 'Hasło musi zawierać co najmniej jedną wielką literę'}), 400
+    if not re.search(r'[0-9]', password):
+        return jsonify({'error': 'Hasło musi zawierać co najmniej jedną cyfrę'}), 400
+
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     user = User(
         email=data['email'],
